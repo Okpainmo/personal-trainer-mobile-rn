@@ -17,6 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "version:bump:android": "node scripts/bump-android-version.mjs",
+    "aab": "node scripts/build-aab.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "prepare": "husky"

@@ -69,6 +69,7 @@
         }
       ],
       "./plugins/withAndroidArchitectures",
+      "./plugins/withAndroidVersion",
       "./plugins/withReleaseSigning"
     ],
     "experiments": {

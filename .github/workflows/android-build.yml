@@ -40,6 +40,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Android version is read natively in app/build.gradle from version.properties
+      # (see plugins/withAndroidVersion.js). In CI we override it per build:
+      # versionCode = run_number (monotonic so Play uploads never collide),
+      # versionName = <major.minor from version.properties>.<run_number>. Written
+      # to GITHUB_ENV so both the prebuild and the Gradle build see it.
+      - name: Compute Android version
+        run: |
+          set -a; . ./version.properties; set +a
+          echo "ANDROID_VERSION_NAME=${VERSION_NAME%.*}.${{ github.run_number }}" >> "$GITHUB_ENV"
+          echo "ANDROID_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
+
       # EXPO_PUBLIC_* values are inlined into the bundle at build time, so the
       # paywall flag must be present here. It's a non-secret feature flag, so it
       # comes from a repo/environment Variable (not a Secret): set the
@@ -76,9 +87,7 @@ jobs:
       # vars are empty, so it leaves the debug-signing fallback in place.
       - name: Expo Prebuild
         env:
-          # Auto-increment versionCode per build so Play Store uploads never
-          # collide. github.run_number is monotonic per workflow.
-          ANDROID_VERSION_CODE: ${{ github.run_number }}
+          # Version comes from the "Compute Android version" step (GITHUB_ENV).
           ANDROID_RELEASE_KEYSTORE_BASE64: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEYSTORE_BASE64 || '' }}
           ANDROID_RELEASE_KEYSTORE_PASSWORD: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
           ANDROID_RELEASE_KEY_ALIAS: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEY_ALIAS || '' }}
