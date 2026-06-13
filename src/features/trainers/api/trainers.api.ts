@@ -17,21 +17,41 @@ const FALLBACK_VIDEO =
 const STAGING_MEDIA_HOST = 'https://api.staging.fitcall.me';
 
 // Placeholder client avatars rendered in the trainer-card stack until real
-// client photos are surfaced through the API. We use local bundle assets
-// (require()) here — every previous network source (randomuser.me indices,
-// pravatar.cc) had partial reliability issues on device and produced empty
-// circles. Local assets are guaranteed to load.
+// client photos are surfaced through the API. Pool is curated Unsplash
+// portraits with an ethnic mix biased toward African per the product
+// brief, with white and Asian rounding it out.
 //
-// All four images are from assets/coaches (the same set used by the auth
-// slideshow) and skew African per the product brief. To diversify further
-// (white / Asian mix), drop additional portrait PNGs into assets/coaches
-// and add them to this array.
-const CLIENT_AVATAR_POOL: number[] = [
-  require('../../../../assets/coaches/CHRIS-2.png'),
-  require('../../../../assets/coaches/CLARKSON-6.png'),
-  require('../../../../assets/coaches/FREEDOM-3.png'),
-  require('../../../../assets/coaches/PURPOSE-2.png'),
+// Unsplash IDs are stable and the same `images.unsplash.com/photo-<id>`
+// pattern is used elsewhere in the codebase (FitnessPreferencesScreen,
+// HomeScreen categories) and loads reliably. ClientAvatarStack has an
+// onError fallback (CLIENT_AVATAR_FALLBACK below) so any URL that does
+// fail on a particular device still renders a known-good portrait
+// instead of an empty circle.
+const CLIENT_AVATAR_QUERY = '?q=80&w=160&h=160&fit=crop&fm=jpg';
+const CLIENT_AVATAR_POOL: string[] = [
+  // African-leaning portraits (extra weight per brief):
+  `https://images.unsplash.com/photo-1531123897727-8f129e1688ce${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1607746882042-944635dfe10e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1546961342-1531eb2a2dec${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1503443207922-dff7d543fd0e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1488161628813-04466f872be2${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1531746020798-e6953c6e8e04${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1492562080023-ab3db95bfbce${CLIENT_AVATAR_QUERY}`,
+  // Asian-leaning portraits:
+  `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1573496359142-b8d87734a5a2${CLIENT_AVATAR_QUERY}`,
+  // White / European-leaning portraits:
+  `https://images.unsplash.com/photo-1494790108377-be9c29b29330${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1500648767791-00dcc994a43e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1517841905240-472988babdf9${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1438761681033-6461ffad8d80${CLIENT_AVATAR_QUERY}`,
 ];
+
+// Local fallback used by ClientAvatarStack when a remote URL fails to load.
+// Exported so the stack component can import it without re-declaring the
+// asset id.
+export const CLIENT_AVATAR_FALLBACK: number = require('../../../../assets/coaches/CHRIS-2.png');
 
 // Stable, dependency-free hash so each trainer id produces the same avatar
 // subset on every render. Sum of char codes is enough variety for indexing
@@ -52,13 +72,16 @@ function hashTrainerId(id: string): number {
 // Different ids → different starting offset → the four visible avatars
 // land in a different order, so cards look visibly distinct even though
 // the underlying pool is small.
-function pickClientAvatars(id: string): { avatars: number[]; count: number } {
+function pickClientAvatars(id: string): { avatars: string[]; count: number } {
   const seed = hashTrainerId(id);
   const count = 4 + (seed % 4); // 4, 5, 6, or 7
   const poolSize = CLIENT_AVATAR_POOL.length;
   const offset = (seed >> 3) % poolSize;
+  // Take the first 4 avatars (max ClientAvatarStack will show) starting at
+  // the trainer-specific offset, so cards visibly differ.
+  const VISIBLE = 4;
   const avatars = Array.from(
-    { length: poolSize },
+    { length: VISIBLE },
     (_, i) => CLIENT_AVATAR_POOL[(offset + i) % poolSize],
   );
   return { avatars, count };

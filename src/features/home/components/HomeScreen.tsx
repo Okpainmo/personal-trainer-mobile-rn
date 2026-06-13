@@ -149,7 +149,7 @@ const TrainerListItem = React.memo(function TrainerListItem({ trainer }: Trainer
         <View style={styles.trainerBody}>
           <View style={styles.trainerInfoColumn}>
             <Typography style={styles.trainerName} numberOfLines={1}>
-              {trainer.name}
+              {firstName}
             </Typography>
             <ClientAvatarStack
               avatars={trainer.clientAvatars}
