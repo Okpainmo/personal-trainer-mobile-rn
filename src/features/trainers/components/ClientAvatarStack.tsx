@@ -1,16 +1,22 @@
 import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, View } from 'react-native';
 
 import { Typography } from '@/shared/components';
 import { fonts, useTheme } from '@/shared/theme';
 
 interface Props {
-  avatars: string[];
+  // Each item is either a remote URI string or a local-bundle asset id from
+  // require(). Image's source prop handles both shapes.
+  avatars: (string | number)[];
   totalClients: number;
   size?: number;
   maxVisible?: number;
   textColor?: string;
   borderColor?: string;
+}
+
+function toSource(item: string | number): ImageSourcePropType {
+  return typeof item === 'string' ? { uri: item } : item;
 }
 
 export function ClientAvatarStack({
@@ -27,10 +33,10 @@ export function ClientAvatarStack({
   return (
     <View style={styles.row}>
       <View style={styles.stack}>
-        {visible.map((uri, i) => (
+        {visible.map((item, i) => (
           <Image
-            key={`${uri}-${i}`}
-            source={{ uri }}
+            key={`${String(item)}-${i}`}
+            source={toSource(item)}
             style={[
               styles.avatar,
               {
