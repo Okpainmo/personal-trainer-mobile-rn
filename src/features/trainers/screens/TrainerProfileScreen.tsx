@@ -256,7 +256,7 @@ export function TrainerProfileScreen() {
               }
               style={styles.videoWrap}
             >
-              <Image source={{ uri: trainer.image }} style={styles.video} />
+              <Image source={{ uri: trainer.image }} style={styles.video} resizeMode="contain" />
               <View style={styles.videoOverlay} />
               <View style={styles.playButton}>
                 <Ionicons name="play" size={22} color="#0F2E5C" />
@@ -569,13 +569,18 @@ const styles = StyleSheet.create({
   },
   videoWrap: {
     width: '100%',
-    height: 180,
+    // Wide-ish video poster: 16:9 reads as "this is a video thumbnail"
+    // instantly. Combined with resizeMode contain on the inner image, no
+    // edges are cropped — portrait sources letterbox into the dark
+    // backgroundColor below.
+    aspectRatio: 16 / 9,
     borderRadius: 14,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#1a1a1a',
   },
-  video: { width: '100%', height: 180, borderRadius: 14 },
+  video: { width: '100%', height: '100%', borderRadius: 14 },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.25)',
