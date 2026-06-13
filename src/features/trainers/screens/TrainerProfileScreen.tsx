@@ -376,7 +376,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   hero: {
-    height: 380,
+    // Reserved space for the hero band (title + subtitle + stats are
+    // positioned absolutely from the bottom of this view). Previously 380dp,
+    // which left ~195dp of empty image above the title and made the page
+    // feel top-heavy. Tightened to 280dp so content sits roughly under the
+    // back button.
+    height: 280,
     justifyContent: 'flex-end',
   },
   cover: {
