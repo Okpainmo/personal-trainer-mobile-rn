@@ -74,13 +74,6 @@ export function TrainerProfileScreen() {
           { id: 'trainer-image-repeat', imageUrl: trainer.image, position: 2 },
         ];
 
-  // The API currently returns total_reviews as the client count, which is
-  // typically 0 for new trainers and reads as "this trainer has no clients".
-  // Pad the displayed value by a fixed offset so every profile shows at least
-  // a baseline. Display-only — no data layer / submission payload changes.
-  const CLIENT_COUNT_OFFSET = 3;
-  const displayedClients = trainer.clients + CLIENT_COUNT_OFFSET;
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style="light" />
@@ -128,7 +121,7 @@ export function TrainerProfileScreen() {
             <View style={styles.heroStatDivider} />
             <View style={styles.heroStatItem}>
               <Text style={styles.heroStatLabel}>Clients</Text>
-              <Text style={styles.heroStatValue}>{displayedClients}</Text>
+              <Text style={styles.heroStatValue}>{trainer.clients}</Text>
             </View>
             {/*
               Rating tile hidden until client reviews ship. trainer.rating is
@@ -171,7 +164,7 @@ export function TrainerProfileScreen() {
             </View>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: colors.textSecondary }]}>Clients</Text>
-              <Text style={[styles.statNumber, { color: colors.text }]}>{displayedClients}</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{trainer.clients}</Text>
             </View>
             {/*
               Body Rating tile hidden until client reviews ship (see hero

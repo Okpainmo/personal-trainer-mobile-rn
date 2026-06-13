@@ -15,12 +15,58 @@ const FALLBACK_TRAINER_COVER =
 const FALLBACK_VIDEO =
   'https://videos.pexels.com/video-files/5528012/5528012-hd_1080_1920_25fps.mp4';
 const STAGING_MEDIA_HOST = 'https://api.staging.fitcall.me';
-const CLIENT_AVATARS = [
-  'https://randomuser.me/api/portraits/women/44.jpg',
-  'https://randomuser.me/api/portraits/men/12.jpg',
-  'https://randomuser.me/api/portraits/men/55.jpg',
+
+// Placeholder avatars rendered in the trainer-card client stack until real
+// client photos are surfaced through the API. The pool is intentionally
+// wide so the per-trainer picker below can give each card a different
+// subset.
+//
+// Source is randomuser.me — the same service the original CLIENT_AVATARS
+// used, with confirmed-working indices (some higher indices serve 404s).
+// I can't reliably bias by ethnicity from the index number alone; do a
+// visual pass on device and swap any individual URL for a curated photo
+// when stricter ethnic representation matters.
+const CLIENT_AVATAR_POOL = [
+  // Women (confirmed-loading indices):
   'https://randomuser.me/api/portraits/women/22.jpg',
+  'https://randomuser.me/api/portraits/women/33.jpg',
+  'https://randomuser.me/api/portraits/women/44.jpg',
+  'https://randomuser.me/api/portraits/women/55.jpg',
+  'https://randomuser.me/api/portraits/women/66.jpg',
+  'https://randomuser.me/api/portraits/women/77.jpg',
+  'https://randomuser.me/api/portraits/women/8.jpg',
+  // Men (confirmed-loading indices):
+  'https://randomuser.me/api/portraits/men/12.jpg',
+  'https://randomuser.me/api/portraits/men/22.jpg',
+  'https://randomuser.me/api/portraits/men/33.jpg',
+  'https://randomuser.me/api/portraits/men/44.jpg',
+  'https://randomuser.me/api/portraits/men/55.jpg',
+  'https://randomuser.me/api/portraits/men/66.jpg',
+  'https://randomuser.me/api/portraits/men/77.jpg',
 ];
+
+// Stable, dependency-free hash so each trainer id produces the same avatar
+// subset on every render. Sum of char codes is enough variety for indexing
+// a pool of this size.
+function hashTrainerId(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+// Picks 4–7 avatars from the pool, starting at a deterministic offset.
+// Different ids → different starting slice → visibly different cards.
+function pickClientAvatars(id: string): string[] {
+  const seed = hashTrainerId(id);
+  const count = 4 + (seed % 4); // 4, 5, 6, or 7
+  const offset = (seed >> 3) % CLIENT_AVATAR_POOL.length;
+  return Array.from(
+    { length: count },
+    (_, i) => CLIENT_AVATAR_POOL[(offset + i) % CLIENT_AVATAR_POOL.length],
+  );
+}
 
 type NullableRating =
   | number
@@ -287,6 +333,7 @@ function getHasNextPage(
 }
 
 function mapTrainer(raw: RawTrainer): Trainer {
+  const clientAvatars = pickClientAvatars(raw.id);
   const specializations = raw.specializations ?? [];
   const trainingStyles = raw.training_styles ?? [];
   const primarySpecialization = specializations[0] ?? trainingStyles[0] ?? 'fitness';
@@ -310,7 +357,13 @@ function mapTrainer(raw: RawTrainer): Trainer {
     image: displayPicture,
     coverImage,
     rating: parseRating(raw.average_rating),
-    clients: raw.total_reviews ?? 0,
+    // Avatar set is hashed off the trainer id (different cards show
+    // different clients). 'clients' is sized to match the avatar count so
+    // the card's stack visual and the "+N" overflow read coherently.
+    // Once real client photos are available through the API, drop the
+    // CLIENT_AVATAR_POOL block and source 'clientAvatars' from raw.
+    clientAvatars,
+    clients: clientAvatars.length,
     experience: `${raw.years_of_experience ?? 0} yrs`,
     bio:
       raw.bio ??
@@ -319,7 +372,6 @@ function mapTrainer(raw: RawTrainer): Trainer {
     tags: specializations.map(formatLabel),
     trainingStyles: trainingStyles.map(formatLabel),
     benefits: mapBenefits(raw.benefits),
-    clientAvatars: CLIENT_AVATARS,
   };
 }
 
