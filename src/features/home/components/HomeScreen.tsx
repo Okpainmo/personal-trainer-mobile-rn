@@ -41,14 +41,13 @@ const AnimatedFlashList = Animated.createAnimatedComponent(
   AnimatedProps<FlashListProps<Trainer>> & React.RefAttributes<FlashListRef<Trainer>>
 >;
 
+// Ordered by user priority for the home view: strength and cardio (the
+// dominant goals for weight-training and weight-loss users) come first.
+// Yoga is intentionally not surfaced here.
 const CATEGORIES = [
   {
-    label: 'Yoga',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=300',
-  },
-  {
-    label: 'Mobility',
-    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=300',
+    label: 'Strength',
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=300',
   },
   {
     label: 'Cardio',
@@ -59,8 +58,8 @@ const CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=300',
   },
   {
-    label: 'Strength',
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=300',
+    label: 'Mobility',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=300',
   },
 ] as const;
 
