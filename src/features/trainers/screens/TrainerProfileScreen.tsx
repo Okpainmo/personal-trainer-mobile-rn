@@ -222,7 +222,10 @@ export function TrainerProfileScreen() {
                   <Image
                     source={{ uri: image.imageUrl }}
                     style={styles.galleryImageInner}
-                    resizeMode="cover"
+                    // 'contain' guarantees no edge is cropped. Combined with
+                    // the portrait card aspectRatio below, most source
+                    // images fill the card with minimal letterboxing.
+                    resizeMode="contain"
                   />
                 </Pressable>
               ))}
@@ -544,11 +547,15 @@ const styles = StyleSheet.create({
   gallery: { flexDirection: 'row', gap: 10, marginTop: 8 },
   galleryImage: {
     flex: 1,
-    // Locking the aspect ratio makes the row breathe at any device width:
-    // both tiles grow together via flex, the height follows automatically.
-    aspectRatio: 1,
+    // Portrait card aspect (3:4). Two tiles side-by-side on a ~360dp device
+    // come out ~165 × 220dp — noticeably bigger than a square thumbnail and
+    // matches the natural aspect of typical trainer portraits, which keeps
+    // 'contain' letterboxing minimal. Background matches the surrounding
+    // info card so any letterbox bars are invisible.
+    aspectRatio: 3 / 4,
     borderRadius: 14,
     overflow: 'hidden',
+    backgroundColor: '#1a1a1a',
   },
   galleryImageInner: { width: '100%', height: '100%' },
   galleryMoreLink: {
