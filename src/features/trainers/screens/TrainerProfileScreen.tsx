@@ -123,11 +123,16 @@ export function TrainerProfileScreen() {
               <Text style={styles.heroStatLabel}>Clients</Text>
               <Text style={styles.heroStatValue}>{trainer.clients}</Text>
             </View>
-            <View style={styles.heroStatDivider} />
+            {/*
+              Rating tile hidden until client reviews ship. trainer.rating is
+              currently 0 for every record, so the tile reads as a one-star
+              review. Restore once reviews are implemented.
+            */}
+            {/* <View style={styles.heroStatDivider} />
             <View style={styles.heroStatItem}>
               <Text style={styles.heroStatLabel}>Rating</Text>
               <Text style={styles.heroStatValue}>★ {trainer.rating}</Text>
-            </View>
+            </View> */}
           </Animated.View>
         </Animated.View>
 
@@ -161,10 +166,14 @@ export function TrainerProfileScreen() {
               <Text style={[styles.statValue, { color: colors.textSecondary }]}>Clients</Text>
               <Text style={[styles.statNumber, { color: colors.text }]}>{trainer.clients}</Text>
             </View>
-            <View style={styles.statItem}>
+            {/*
+              Body Rating tile hidden until client reviews ship (see hero
+              stats above for context). Restore once reviews land.
+            */}
+            {/* <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: colors.textSecondary }]}>Rating</Text>
               <Text style={[styles.statNumber, { color: colors.text }]}>{trainer.rating}</Text>
-            </View>
+            </View> */}
           </Animated.View>
 
           {/* COACH */}

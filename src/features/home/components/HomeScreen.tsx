@@ -137,9 +137,15 @@ const TrainerListItem = React.memo(function TrainerListItem({ trainer }: Trainer
           locations={[0, 0.55, 1]}
           style={styles.trainerBottomGlass}
         />
-        <View style={styles.trainerRatingBadge}>
+        {/*
+          Rating badge hidden until the client-reviews feature ships. The API
+          currently returns 0 for every trainer (no review records yet), and a
+          "★ 0" badge reads as a one-star review instead of "no reviews". Drop
+          back in when reviews are implemented.
+        */}
+        {/* <View style={styles.trainerRatingBadge}>
           <Typography style={styles.trainerRating}>★ {trainer.rating}</Typography>
-        </View>
+        </View> */}
         <View style={styles.trainerBody}>
           <View style={styles.trainerInfoColumn}>
             <Typography style={styles.trainerName} numberOfLines={1}>
