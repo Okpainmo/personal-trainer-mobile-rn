@@ -30,6 +30,10 @@ function Slide({ uri, index, active }: SlideProps) {
         source={{ uri }}
         style={StyleSheet.absoluteFill}
         contentFit="cover"
+        // Anchor the visible area at the top of the source photo. Trainer
+        // portraits put the head at the top of the frame; without this,
+        // contentFit="cover" centre-crops and clips the head off the card.
+        contentPosition="top"
         cachePolicy="memory-disk"
       />
     </Animated.View>
