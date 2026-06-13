@@ -187,6 +187,10 @@ export function HomeScreen() {
   const greeting = getTimeOfDayGreeting();
   const trainerListRef = useRef<FlashListRef<Trainer>>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  // Always pass `null` so the query key is stable across category switches —
+  // we fetch the trainer list once and filter on the client. Previously each
+  // category produced its own react-query cache entry, which meant tapping a
+  // chip triggered a fresh request + loading state every time.
   const {
     data: trainerPages,
     isLoading,
@@ -195,14 +199,20 @@ export function HomeScreen() {
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useInfiniteTrainers(selectedCategory);
-  // The API already filters by `selectedCategory` via the queryKey, so we no
-  // longer re-filter on the client — that was running on every render and
-  // duplicating server work.
-  const trainers = useMemo(
+  } = useInfiniteTrainers(null);
+  const allTrainers = useMemo(
     () => trainerPages?.pages.flatMap((page) => page.trainers) ?? [],
     [trainerPages],
   );
+  const trainers = useMemo(() => {
+    if (!selectedCategory) return allTrainers;
+    const needle = selectedCategory.toLowerCase();
+    return allTrainers.filter((t) => {
+      const specialty = t.specialty?.toLowerCase() ?? '';
+      const tags = (t.tags ?? []).map((tag) => tag.toLowerCase());
+      return specialty.includes(needle) || tags.includes(needle);
+    });
+  }, [allTrainers, selectedCategory]);
   const showTrainerLoading = isLoading && trainers.length === 0;
   const showLoadMore = isFetchingNextPage && trainers.length > 0;
 
