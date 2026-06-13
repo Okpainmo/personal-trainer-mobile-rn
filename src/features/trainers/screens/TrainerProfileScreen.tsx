@@ -569,11 +569,11 @@ const styles = StyleSheet.create({
   },
   videoWrap: {
     width: '100%',
-    // Wide-ish video poster: 16:9 reads as "this is a video thumbnail"
-    // instantly. Combined with resizeMode contain on the inner image, no
-    // edges are cropped — portrait sources letterbox into the dark
-    // backgroundColor below.
-    aspectRatio: 16 / 9,
+    // Portrait 3:4 matches typical trainer portraits (and the gallery tiles),
+    // so the thumbnail fills the card edge-to-edge with no truncation when
+    // the source is a standard portrait photo. Dark background covers any
+    // residual letterbox for off-aspect sources.
+    aspectRatio: 3 / 4,
     borderRadius: 14,
     overflow: 'hidden',
     alignItems: 'center',
