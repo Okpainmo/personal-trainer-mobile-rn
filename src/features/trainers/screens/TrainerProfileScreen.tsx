@@ -206,17 +206,38 @@ export function TrainerProfileScreen() {
                 ),
               )}
             </View>
+            {/*
+              Gallery preview: show two large tiles so images aren't visually
+              clipped at thumbnail size. If the trainer has more than two
+              gallery images, a "See all N photos" link opens the full
+              preview modal at the first gallery image.
+            */}
             <View style={styles.gallery}>
-              {visibleGalleryImages.slice(0, 5).map((image, index) => (
+              {visibleGalleryImages.slice(0, 2).map((image, index) => (
                 <Pressable
                   key={image.id}
                   style={styles.galleryImage}
                   onPress={() => setExpandedImageIndex(index + 1)}
                 >
-                  <Image source={{ uri: image.imageUrl }} style={styles.galleryImageInner} />
+                  <Image
+                    source={{ uri: image.imageUrl }}
+                    style={styles.galleryImageInner}
+                    resizeMode="cover"
+                  />
                 </Pressable>
               ))}
             </View>
+            {visibleGalleryImages.length > 2 ? (
+              <Pressable
+                onPress={() => setExpandedImageIndex(1)}
+                style={styles.galleryMoreLink}
+                hitSlop={8}
+              >
+                <Text style={[styles.galleryMoreText, { color: colors.primary }]}>
+                  See all {visibleGalleryImages.length} photos →
+                </Text>
+              </Pressable>
+            ) : null}
 
             <Text style={[styles.sectionTitle, { color: colors.text }]}>See Trainer In Action</Text>
             <Pressable
@@ -520,9 +541,25 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   trainingStyleText: { fontSize: 11, fontWeight: '700' },
-  gallery: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  galleryImage: { width: '31%', height: 70, borderRadius: 10, overflow: 'hidden' },
+  gallery: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  galleryImage: {
+    flex: 1,
+    // Locking the aspect ratio makes the row breathe at any device width:
+    // both tiles grow together via flex, the height follows automatically.
+    aspectRatio: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+  },
   galleryImageInner: { width: '100%', height: '100%' },
+  galleryMoreLink: {
+    alignSelf: 'flex-end',
+    paddingVertical: 8,
+    marginTop: 2,
+  },
+  galleryMoreText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   videoWrap: {
     width: '100%',
     height: 180,
