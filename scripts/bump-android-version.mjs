@@ -23,8 +23,21 @@ function parse(text) {
 }
 
 const props = parse(existsSync(file) ? readFileSync(file, 'utf8') : '');
-const currentName = props.VERSION_NAME || '1.0.0';
-const currentCode = Number.parseInt(props.VERSION_CODE || '0', 10) || 0;
+
+// Fall back to defaults only when a key is absent; reject malformed values
+// outright so a typo can't silently emit bogus version metadata downstream.
+const currentName = props.VERSION_NAME ?? '1.0.0';
+if (!/^\d+(\.\d+)*$/.test(currentName)) {
+  throw new Error(
+    `version.properties: VERSION_NAME "${currentName}" is not a valid dotted version.`,
+  );
+}
+
+const rawCode = props.VERSION_CODE ?? '0';
+if (!/^\d+$/.test(rawCode)) {
+  throw new Error(`version.properties: VERSION_CODE "${rawCode}" is not a non-negative integer.`);
+}
+const currentCode = Number.parseInt(rawCode, 10);
 
 let nextName = currentName;
 if (!codeOnly) {

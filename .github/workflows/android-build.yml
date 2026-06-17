@@ -47,7 +47,9 @@ jobs:
       # to GITHUB_ENV so both the prebuild and the Gradle build see it.
       - name: Compute Android version
         run: |
-          set -a; . ./version.properties; set +a
+          # Parse the value only (grep/cut) — never `source` the file, which would
+          # execute repository-controlled shell in a job that holds signing secrets.
+          VERSION_NAME=$(grep -E '^VERSION_NAME=' version.properties | head -n1 | cut -d= -f2- | tr -d '[:space:]')
           echo "ANDROID_VERSION_NAME=${VERSION_NAME%.*}.${{ github.run_number }}" >> "$GITHUB_ENV"
           echo "ANDROID_VERSION_CODE=${{ github.run_number }}" >> "$GITHUB_ENV"
 

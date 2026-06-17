@@ -215,7 +215,7 @@ export function HomeScreen() {
     return allTrainers.filter((t) => {
       const specialty = t.specialty?.toLowerCase() ?? '';
       const tags = (t.tags ?? []).map((tag) => tag.toLowerCase());
-      return specialty.includes(needle) || tags.includes(needle);
+      return specialty.includes(needle) || tags.some((tag) => tag.includes(needle));
     });
   }, [allTrainers, selectedCategory]);
   const showTrainerLoading = isLoading && trainers.length === 0;

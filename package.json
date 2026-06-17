@@ -31,7 +31,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": "eslint --max-warnings 0 --fix",
+    "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --max-warnings 0 --fix",
     "*.{json,md,yml,yaml}": "prettier --write"
   },
   "dependencies": {

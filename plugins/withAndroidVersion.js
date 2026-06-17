@@ -31,13 +31,29 @@ function applyVersion(contents) {
   let next = contents;
 
   // 1. Inject the resolver once, just before the top-level `android {` block.
+  // Fail loudly rather than silently shipping unresolved versions if Expo ever
+  // changes the generated build.gradle shape.
   if (!next.includes('fitcallVersionProps')) {
-    next = next.replace(/^android\s*\{/m, (match) => `${VERSION_RESOLVER}\n${match}`);
+    const injected = next.replace(/^android\s*\{/m, (match) => `${VERSION_RESOLVER}\n${match}`);
+    if (injected === next) {
+      throw new Error(
+        'withAndroidVersion: could not find a top-level `android {` block to inject the version resolver.',
+      );
+    }
+    next = injected;
   }
 
   // 2. Point defaultConfig's versionCode/versionName at the resolved values.
-  next = next.replace(/versionCode\s+\d+/, 'versionCode fitcallVersionCode');
-  next = next.replace(/versionName\s+"[^"]*"/, 'versionName fitcallVersionName');
+  const codeRe = /versionCode\s+\d+/;
+  const nameRe = /versionName\s+"[^"]*"/;
+  if (!codeRe.test(next) || !nameRe.test(next)) {
+    throw new Error(
+      'withAndroidVersion: could not find versionCode/versionName in app/build.gradle — ' +
+        'the generated Gradle format may have changed.',
+    );
+  }
+  next = next.replace(codeRe, 'versionCode fitcallVersionCode');
+  next = next.replace(nameRe, 'versionName fitcallVersionName');
 
   return next;
 }
