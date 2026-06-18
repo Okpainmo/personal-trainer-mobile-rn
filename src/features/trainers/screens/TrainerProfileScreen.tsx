@@ -123,11 +123,16 @@ export function TrainerProfileScreen() {
               <Text style={styles.heroStatLabel}>Clients</Text>
               <Text style={styles.heroStatValue}>{trainer.clients}</Text>
             </View>
-            <View style={styles.heroStatDivider} />
+            {/*
+              Rating tile hidden until client reviews ship. trainer.rating is
+              currently 0 for every record, so the tile reads as a one-star
+              review. Restore once reviews are implemented.
+            */}
+            {/* <View style={styles.heroStatDivider} />
             <View style={styles.heroStatItem}>
               <Text style={styles.heroStatLabel}>Rating</Text>
               <Text style={styles.heroStatValue}>★ {trainer.rating}</Text>
-            </View>
+            </View> */}
           </Animated.View>
         </Animated.View>
 
@@ -161,10 +166,14 @@ export function TrainerProfileScreen() {
               <Text style={[styles.statValue, { color: colors.textSecondary }]}>Clients</Text>
               <Text style={[styles.statNumber, { color: colors.text }]}>{trainer.clients}</Text>
             </View>
-            <View style={styles.statItem}>
+            {/*
+              Body Rating tile hidden until client reviews ship (see hero
+              stats above for context). Restore once reviews land.
+            */}
+            {/* <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: colors.textSecondary }]}>Rating</Text>
               <Text style={[styles.statNumber, { color: colors.text }]}>{trainer.rating}</Text>
-            </View>
+            </View> */}
           </Animated.View>
 
           {/* COACH */}
@@ -190,17 +199,41 @@ export function TrainerProfileScreen() {
                 ),
               )}
             </View>
+            {/*
+              Gallery preview: show two large tiles so images aren't visually
+              clipped at thumbnail size. If the trainer has more than two
+              gallery images, a "See all N photos" link opens the full
+              preview modal at the first gallery image.
+            */}
             <View style={styles.gallery}>
-              {visibleGalleryImages.slice(0, 5).map((image, index) => (
+              {visibleGalleryImages.slice(0, 2).map((image, index) => (
                 <Pressable
                   key={image.id}
                   style={styles.galleryImage}
                   onPress={() => setExpandedImageIndex(index + 1)}
                 >
-                  <Image source={{ uri: image.imageUrl }} style={styles.galleryImageInner} />
+                  <Image
+                    source={{ uri: image.imageUrl }}
+                    style={styles.galleryImageInner}
+                    // 'contain' guarantees no edge is cropped. Combined with
+                    // the portrait card aspectRatio below, most source
+                    // images fill the card with minimal letterboxing.
+                    resizeMode="contain"
+                  />
                 </Pressable>
               ))}
             </View>
+            {visibleGalleryImages.length > 2 ? (
+              <Pressable
+                onPress={() => setExpandedImageIndex(1)}
+                style={styles.galleryMoreLink}
+                hitSlop={8}
+              >
+                <Text style={[styles.galleryMoreText, { color: colors.primary }]}>
+                  See all {visibleGalleryImages.length} photos →
+                </Text>
+              </Pressable>
+            ) : null}
 
             <Text style={[styles.sectionTitle, { color: colors.text }]}>See Trainer In Action</Text>
             <Pressable
@@ -216,7 +249,7 @@ export function TrainerProfileScreen() {
               }
               style={styles.videoWrap}
             >
-              <Image source={{ uri: trainer.image }} style={styles.video} />
+              <Image source={{ uri: trainer.image }} style={styles.video} resizeMode="contain" />
               <View style={styles.videoOverlay} />
               <View style={styles.playButton}>
                 <Ionicons name="play" size={22} color="#0F2E5C" />
@@ -336,7 +369,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   hero: {
-    height: 380,
+    // Reserved space for the hero band (title + subtitle + stats are
+    // positioned absolutely from the bottom of this view). Previously 380dp,
+    // which left ~195dp of empty image above the title and made the page
+    // feel top-heavy. Tightened to 280dp so content sits roughly under the
+    // back button.
+    height: 280,
     justifyContent: 'flex-end',
   },
   cover: {
@@ -504,18 +542,43 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
   },
   trainingStyleText: { fontSize: 11, fontWeight: '700' },
-  gallery: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  galleryImage: { width: '31%', height: 70, borderRadius: 10, overflow: 'hidden' },
+  gallery: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  galleryImage: {
+    flex: 1,
+    // Portrait card aspect (3:4). Two tiles side-by-side on a ~360dp device
+    // come out ~165 × 220dp — noticeably bigger than a square thumbnail and
+    // matches the natural aspect of typical trainer portraits, which keeps
+    // 'contain' letterboxing minimal. Background matches the surrounding
+    // info card so any letterbox bars are invisible.
+    aspectRatio: 3 / 4,
+    borderRadius: 14,
+    overflow: 'hidden',
+    backgroundColor: '#1a1a1a',
+  },
   galleryImageInner: { width: '100%', height: '100%' },
+  galleryMoreLink: {
+    alignSelf: 'flex-end',
+    paddingVertical: 8,
+    marginTop: 2,
+  },
+  galleryMoreText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
   videoWrap: {
     width: '100%',
-    height: 180,
+    // Portrait 3:4 matches typical trainer portraits (and the gallery tiles),
+    // so the thumbnail fills the card edge-to-edge with no truncation when
+    // the source is a standard portrait photo. Dark background covers any
+    // residual letterbox for off-aspect sources.
+    aspectRatio: 3 / 4,
     borderRadius: 14,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#1a1a1a',
   },
-  video: { width: '100%', height: 180, borderRadius: 14 },
+  video: { width: '100%', height: '100%', borderRadius: 14 },
   videoOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.25)',

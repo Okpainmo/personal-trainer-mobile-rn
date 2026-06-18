@@ -40,7 +40,6 @@
       ],
       "expo-font",
       "@react-native-google-signin/google-signin",
-      "expo-apple-authentication",
       "expo-video",
       [
         "expo-location",
@@ -69,6 +68,7 @@
         }
       ],
       "./plugins/withAndroidArchitectures",
+      "./plugins/withAndroidVersion",
       "./plugins/withReleaseSigning"
     ],
     "experiments": {

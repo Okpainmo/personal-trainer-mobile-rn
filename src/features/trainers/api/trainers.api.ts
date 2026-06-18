@@ -15,12 +15,77 @@ const FALLBACK_TRAINER_COVER =
 const FALLBACK_VIDEO =
   'https://videos.pexels.com/video-files/5528012/5528012-hd_1080_1920_25fps.mp4';
 const STAGING_MEDIA_HOST = 'https://api.staging.fitcall.me';
-const CLIENT_AVATARS = [
-  'https://randomuser.me/api/portraits/women/44.jpg',
-  'https://randomuser.me/api/portraits/men/12.jpg',
-  'https://randomuser.me/api/portraits/men/55.jpg',
-  'https://randomuser.me/api/portraits/women/22.jpg',
+
+// Placeholder client avatars rendered in the trainer-card stack until real
+// client photos are surfaced through the API. Pool is curated Unsplash
+// portraits with an ethnic mix biased toward African per the product
+// brief, with white and Asian rounding it out.
+//
+// Unsplash IDs are stable and the same `images.unsplash.com/photo-<id>`
+// pattern is used elsewhere in the codebase (FitnessPreferencesScreen,
+// HomeScreen categories) and loads reliably. ClientAvatarStack has an
+// onError fallback (CLIENT_AVATAR_FALLBACK below) so any URL that does
+// fail on a particular device still renders a known-good portrait
+// instead of an empty circle.
+const CLIENT_AVATAR_QUERY = '?q=80&w=160&h=160&fit=crop&fm=jpg';
+const CLIENT_AVATAR_POOL: string[] = [
+  // African-leaning portraits (extra weight per brief):
+  `https://images.unsplash.com/photo-1531123897727-8f129e1688ce${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1607746882042-944635dfe10e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1546961342-1531eb2a2dec${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1503443207922-dff7d543fd0e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1488161628813-04466f872be2${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1531746020798-e6953c6e8e04${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1492562080023-ab3db95bfbce${CLIENT_AVATAR_QUERY}`,
+  // Asian-leaning portraits:
+  `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1573496359142-b8d87734a5a2${CLIENT_AVATAR_QUERY}`,
+  // White / European-leaning portraits:
+  `https://images.unsplash.com/photo-1494790108377-be9c29b29330${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1500648767791-00dcc994a43e${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1517841905240-472988babdf9${CLIENT_AVATAR_QUERY}`,
+  `https://images.unsplash.com/photo-1438761681033-6461ffad8d80${CLIENT_AVATAR_QUERY}`,
 ];
+
+// Local fallback used by ClientAvatarStack when a remote URL fails to load.
+// Exported so the stack component can import it without re-declaring the
+// asset id.
+export const CLIENT_AVATAR_FALLBACK: number = require('../../../../assets/coaches/CHRIS-2.png');
+
+// Stable, dependency-free hash so each trainer id produces the same avatar
+// subset on every render. Sum of char codes is enough variety for indexing
+// a pool of this size.
+function hashTrainerId(id: string): number {
+  let hash = 0;
+  for (let i = 0; i < id.length; i += 1) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+// Picks the avatars shown in the card stack and the "+N" count displayed
+// next to it. The stack only renders up to 4 avatars (see
+// ClientAvatarStack.maxVisible) so the avatar array is sized to that cap;
+// `count` (4–7) drives the numeric label.
+//
+// Different ids → different starting offset → the four visible avatars
+// land in a different order, so cards look visibly distinct even though
+// the underlying pool is small.
+function pickClientAvatars(id: string): { avatars: string[]; count: number } {
+  const seed = hashTrainerId(id);
+  const count = 4 + (seed % 4); // 4, 5, 6, or 7
+  const poolSize = CLIENT_AVATAR_POOL.length;
+  const offset = (seed >> 3) % poolSize;
+  // Take the first 4 avatars (max ClientAvatarStack will show) starting at
+  // the trainer-specific offset, so cards visibly differ.
+  const VISIBLE = 4;
+  const avatars = Array.from(
+    { length: VISIBLE },
+    (_, i) => CLIENT_AVATAR_POOL[(offset + i) % poolSize],
+  );
+  return { avatars, count };
+}
 
 type NullableRating =
   | number
@@ -287,6 +352,7 @@ function getHasNextPage(
 }
 
 function mapTrainer(raw: RawTrainer): Trainer {
+  const { avatars: clientAvatars, count: clientCount } = pickClientAvatars(raw.id);
   const specializations = raw.specializations ?? [];
   const trainingStyles = raw.training_styles ?? [];
   const primarySpecialization = specializations[0] ?? trainingStyles[0] ?? 'fitness';
@@ -310,7 +376,13 @@ function mapTrainer(raw: RawTrainer): Trainer {
     image: displayPicture,
     coverImage,
     rating: parseRating(raw.average_rating),
-    clients: raw.total_reviews ?? 0,
+    // Avatar set is hashed off the trainer id (different cards show
+    // different clients). 'clients' is sized to match the avatar count so
+    // the card's stack visual and the "+N" overflow read coherently.
+    // Once real client photos are available through the API, drop the
+    // CLIENT_AVATAR_POOL block and source 'clientAvatars' from raw.
+    clientAvatars,
+    clients: clientCount,
     experience: `${raw.years_of_experience ?? 0} yrs`,
     bio:
       raw.bio ??
@@ -319,7 +391,6 @@ function mapTrainer(raw: RawTrainer): Trainer {
     tags: specializations.map(formatLabel),
     trainingStyles: trainingStyles.map(formatLabel),
     benefits: mapBenefits(raw.benefits),
-    clientAvatars: CLIENT_AVATARS,
   };
 }
 

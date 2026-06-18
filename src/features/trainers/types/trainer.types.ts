@@ -12,7 +12,10 @@ export interface Trainer {
   tags: string[];
   trainingStyles: string[];
   benefits: TrainerBenefit[];
-  clientAvatars: string[];
+  // Either remote URIs or local-bundle asset ids (from require()). Image's
+  // source prop accepts both — we use local placeholders while real client
+  // photos aren't yet sourced through the API.
+  clientAvatars: (string | number)[];
 }
 
 export interface TrainerBenefit {

@@ -17,6 +17,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
+    "version:bump:android": "node scripts/bump-android-version.mjs",
+    "aab": "node scripts/build-aab.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "prepare": "husky"
@@ -29,12 +31,13 @@
     }
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": "eslint --max-warnings 0 --fix",
+    "*.{ts,tsx,js,jsx,mjs,cjs}": "eslint --max-warnings 0 --fix",
     "*.{json,md,yml,yaml}": "prettier --write"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
     "@hookform/resolvers": "^5.2.2",
+    "@invertase/react-native-apple-authentication": "^2.5.1",
     "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-navigation/bottom-tabs": "^7.15.5",
@@ -44,7 +47,6 @@
     "@tanstack/react-query": "^5.80.5",
     "axios": "^1.9.0",
     "expo": "~55.0.19",
-    "expo-apple-authentication": "~55.0.13",
     "expo-av": "^16.0.8",
     "expo-blur": "~55.0.14",
     "expo-build-properties": "~55.0.14",
