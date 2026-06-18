@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import appleAuthLib from '@invertase/react-native-apple-authentication';
 import {
   GoogleSignin,
   isErrorWithCode,
   isSuccessResponse,
   statusCodes,
 } from '@react-native-google-signin/google-signin';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { Href, router } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, Platform, Pressable, StyleSheet, View } from 'react-native';
@@ -112,11 +112,10 @@ export function AuthForm({ variant, onDark }: AuthFormProps) {
 
     setIsAppleFlowPending(true);
     try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
+      const credential = await appleAuthLib.performRequest({
+        requestedOperation: appleAuthLib.Operation.LOGIN,
+        // FULL_NAME must be requested before EMAIL for consistent results.
+        requestedScopes: [appleAuthLib.Scope.FULL_NAME, appleAuthLib.Scope.EMAIL],
       });
 
       const identityToken = credential.identityToken;
@@ -143,7 +142,7 @@ export function AuthForm({ variant, onDark }: AuthFormProps) {
       );
     } catch (error) {
       // User dismissed the native sheet — not an error worth surfacing.
-      if ((error as { code?: string }).code === 'ERR_REQUEST_CANCELED') {
+      if ((error as { code?: string }).code === appleAuthLib.Error.CANCELED) {
         return;
       }
       toast.error(MESSAGES.appleGeneric);
@@ -161,7 +160,7 @@ export function AuthForm({ variant, onDark }: AuthFormProps) {
         disabled={googleAuth.isPending || isGoogleFlowPending}
       />
 
-      {Platform.OS === 'ios' ? (
+      {Platform.OS === 'ios' && appleAuthLib.isSupported ? (
         <SocialButton
           icon={<Ionicons name="logo-apple" size={20} color="#FFFFFF" />}
           label={`${verb} with Apple`}
