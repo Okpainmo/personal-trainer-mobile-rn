@@ -78,8 +78,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   video: {
+    // Fill the entire portrait screen so the player takes the full
+    // available space on arrival, without the user having to tap the
+    // expand control on the native chrome. contentFit="contain" on the
+    // VideoView keeps the actual video frame letterboxed inside this
+    // area instead of cropping.
+    flex: 1,
     width: '100%',
-    height: 260,
   },
 });
 
