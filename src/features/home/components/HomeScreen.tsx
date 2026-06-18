@@ -41,14 +41,13 @@ const AnimatedFlashList = Animated.createAnimatedComponent(
   AnimatedProps<FlashListProps<Trainer>> & React.RefAttributes<FlashListRef<Trainer>>
 >;
 
+// Ordered by user priority for the home view: strength and cardio (the
+// dominant goals for weight-training and weight-loss users) come first.
+// Yoga is intentionally not surfaced here.
 const CATEGORIES = [
   {
-    label: 'Yoga',
-    image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=300',
-  },
-  {
-    label: 'Mobility',
-    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=300',
+    label: 'Strength',
+    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=300',
   },
   {
     label: 'Cardio',
@@ -59,8 +58,8 @@ const CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=300',
   },
   {
-    label: 'Strength',
-    image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=300',
+    label: 'Mobility',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=300',
   },
 ] as const;
 
@@ -138,13 +137,19 @@ const TrainerListItem = React.memo(function TrainerListItem({ trainer }: Trainer
           locations={[0, 0.55, 1]}
           style={styles.trainerBottomGlass}
         />
-        <View style={styles.trainerRatingBadge}>
+        {/*
+          Rating badge hidden until the client-reviews feature ships. The API
+          currently returns 0 for every trainer (no review records yet), and a
+          "★ 0" badge reads as a one-star review instead of "no reviews". Drop
+          back in when reviews are implemented.
+        */}
+        {/* <View style={styles.trainerRatingBadge}>
           <Typography style={styles.trainerRating}>★ {trainer.rating}</Typography>
-        </View>
+        </View> */}
         <View style={styles.trainerBody}>
           <View style={styles.trainerInfoColumn}>
             <Typography style={styles.trainerName} numberOfLines={1}>
-              {trainer.name}
+              {firstName}
             </Typography>
             <ClientAvatarStack
               avatars={trainer.clientAvatars}
@@ -187,6 +192,10 @@ export function HomeScreen() {
   const greeting = getTimeOfDayGreeting();
   const trainerListRef = useRef<FlashListRef<Trainer>>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  // Always pass `null` so the query key is stable across category switches —
+  // we fetch the trainer list once and filter on the client. Previously each
+  // category produced its own react-query cache entry, which meant tapping a
+  // chip triggered a fresh request + loading state every time.
   const {
     data: trainerPages,
     isLoading,
@@ -195,14 +204,20 @@ export function HomeScreen() {
     hasNextPage,
     fetchNextPage,
     refetch,
-  } = useInfiniteTrainers(selectedCategory);
-  // The API already filters by `selectedCategory` via the queryKey, so we no
-  // longer re-filter on the client — that was running on every render and
-  // duplicating server work.
-  const trainers = useMemo(
+  } = useInfiniteTrainers(null);
+  const allTrainers = useMemo(
     () => trainerPages?.pages.flatMap((page) => page.trainers) ?? [],
     [trainerPages],
   );
+  const trainers = useMemo(() => {
+    if (!selectedCategory) return allTrainers;
+    const needle = selectedCategory.toLowerCase();
+    return allTrainers.filter((t) => {
+      const specialty = t.specialty?.toLowerCase() ?? '';
+      const tags = (t.tags ?? []).map((tag) => tag.toLowerCase());
+      return specialty.includes(needle) || tags.some((tag) => tag.includes(needle));
+    });
+  }, [allTrainers, selectedCategory]);
   const showTrainerLoading = isLoading && trainers.length === 0;
   const showLoadMore = isFetchingNextPage && trainers.length > 0;
 

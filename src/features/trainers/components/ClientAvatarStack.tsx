@@ -1,16 +1,39 @@
-import React from 'react';
-import { Image, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { Image, ImageSourcePropType, ImageStyle, StyleProp, StyleSheet, View } from 'react-native';
 
 import { Typography } from '@/shared/components';
 import { fonts, useTheme } from '@/shared/theme';
 
+import { CLIENT_AVATAR_FALLBACK } from '../api/trainers.api';
+
 interface Props {
-  avatars: string[];
+  // Each item is either a remote URI string or a local-bundle asset id from
+  // require(). Image's source prop handles both shapes.
+  avatars: (string | number)[];
   totalClients: number;
   size?: number;
   maxVisible?: number;
   textColor?: string;
   borderColor?: string;
+}
+
+function toSource(item: string | number): ImageSourcePropType {
+  return typeof item === 'string' ? { uri: item } : item;
+}
+
+interface AvatarSlotProps {
+  item: string | number;
+  style: StyleProp<ImageStyle>;
+}
+
+// Per-slot Image that swaps to the local fallback if the remote URL fails
+// to load. Tracking the failure inside a small subcomponent gives us
+// independent onError state per avatar without the parent re-rendering
+// the whole stack.
+function AvatarSlot({ item, style }: AvatarSlotProps) {
+  const [failed, setFailed] = useState(false);
+  const source = failed ? CLIENT_AVATAR_FALLBACK : toSource(item);
+  return <Image source={source} style={style} onError={() => setFailed(true)} />;
 }
 
 export function ClientAvatarStack({
@@ -27,10 +50,10 @@ export function ClientAvatarStack({
   return (
     <View style={styles.row}>
       <View style={styles.stack}>
-        {visible.map((uri, i) => (
-          <Image
-            key={`${uri}-${i}`}
-            source={{ uri }}
+        {visible.map((item, i) => (
+          <AvatarSlot
+            key={`${String(item)}-${i}`}
+            item={item}
             style={[
               styles.avatar,
               {
